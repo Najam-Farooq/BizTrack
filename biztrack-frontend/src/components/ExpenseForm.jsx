@@ -1,91 +1,130 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { TextField, Button, Snackbar, Alert } from "@mui/material";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 import api from "../services/api";
 
+
+const schema = yup.object().shape({
+  description: yup.string().required("Description is required"),
+  amount: yup.number().typeError("Amount must be a number").positive().required(),
+  category: yup.string().required("Category is required"),
+});
+
+
 const ExpenseForm = ({ onSuccess, editingExpense, cancelEdit }) => {
-  const [form, setForm] = useState({
-    description: "",
-    amount: "",
-    category: "",
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    defaultValues: { description: "", amount: "", category: "" },
+    resolver: yupResolver(schema),
   });
-  const [error, setError] = useState("");
+
+  const [success, setSuccess] = React.useState(false);
 
   useEffect(() => {
     if (editingExpense) {
-      setForm({
-        description: editingExpense.description,
-        amount: editingExpense.amount,
-        category: editingExpense.category,
-      });
+      setValue("description", editingExpense.description);
+      setValue("amount", editingExpense.amount);
+      setValue("category", editingExpense.category);
     }
-  }, [editingExpense]);
+  }, [editingExpense, setValue]);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { description, amount, category } = form;
-
-    if (!description || !amount || !category) {
-      setError("All fields are required");
-      return;
-    }
-
+  const onSubmit = async (data) => {
     try {
       if (editingExpense) {
-        await api.put(`/expenses/${editingExpense.id}`, {
-          ...form,
-          amount: parseFloat(amount),
-        });
+        await api.put(`/expenses/${editingExpense.id}`, data);
       } else {
-        await api.post("/expenses/", {
-          ...form,
-          amount: parseFloat(amount),
-        });
+        await api.post("/expenses/", data);
       }
-
-      setForm({ description: "", amount: "", category: "" });
-      setError("");
+      setSuccess(true);
+      reset();
       onSuccess();
     } catch (err) {
       console.error("❌ Error saving expense:", err);
-      setError("Failed to save expense");
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
+    return (
+    <form onSubmit={handleSubmit(onSubmit)} style={{ marginBottom: "20px" }}>
       <h3>{editingExpense ? "Edit Expense" : "Add Expense"}</h3>
-      <input
-        type="text"
+
+      <Controller
         name="description"
-        placeholder="Description"
-        value={form.description}
-        onChange={handleChange}
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Description"
+            fullWidth
+            margin="normal"
+            error={!!errors.description}
+            helperText={errors.description?.message}
+          />
+        )}
       />
-      <input
-        type="number"
-        step="0.01"
+
+      <Controller
         name="amount"
-        placeholder="Amount"
-        value={form.amount}
-        onChange={handleChange}
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Amount"
+            fullWidth
+            margin="normal"
+            type="number"
+            error={!!errors.amount}
+            helperText={errors.amount?.message}
+          />
+        )}
       />
-      <input
-        type="text"
+
+      <Controller
         name="category"
-        placeholder="Category"
-        value={form.category}
-        onChange={handleChange}
+        control={control}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            label="Category"
+            fullWidth
+            margin="normal"
+            error={!!errors.category}
+            helperText={errors.category?.message}
+          />
+        )}
       />
-      <button type="submit">{editingExpense ? "Update" : "Add"}</button>
+
+      <Button type="submit" variant="contained" color="primary">
+        {editingExpense ? "Update" : "Add"}
+      </Button>
+
       {editingExpense && (
-        <button type="button" onClick={cancelEdit} style={{ marginLeft: "10px" }}>
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={cancelEdit}
+          style={{ marginLeft: "10px" }}
+        >
           Cancel
-        </button>
+        </Button>
       )}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      <Snackbar
+        open={success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={() => setSuccess(false)} severity="success" sx={{ width: "100%" }}>
+          {editingExpense ? "Expense updated!" : "Expense added!"}
+        </Alert>
+      </Snackbar>
     </form>
   );
 };

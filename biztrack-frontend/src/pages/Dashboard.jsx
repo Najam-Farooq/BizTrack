@@ -1,17 +1,27 @@
+// src/pages/Dashboard.jsx
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import "./Dashboard.css"; // optional if styling
 
 const Dashboard = () => {
   const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    api.get("/dashboard/")
-      .then((res) => setSummary(res.data))
-      .catch((err) => console.error("Error fetching dashboard:", err));
-  }, []);
+    api.get("auth/users/me")
+      .then(() => api.get("/dashboard/"))
+      .then((res) => {
+        setSummary(res.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        localStorage.removeItem("token");
+        navigate("/login");
+      });
+  }, [navigate]);
 
-  if (!summary) return <p>Loading...</p>;
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="dashboard">

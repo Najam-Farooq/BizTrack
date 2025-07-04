@@ -10,3 +10,4 @@ class Product(Base):
     price = Column(Float)
     quantity = Column(Integer)
     image = Column(String(255), nullable=True)  # Path to image file
+    

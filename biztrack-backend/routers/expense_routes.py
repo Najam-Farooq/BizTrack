@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models.expense import Expense
 from schemas.expense_schema import ExpenseCreate, ExpenseOut
+from auth.dependencies import require_roles
 
 router = APIRouter(
     prefix="/expenses",
@@ -57,7 +58,7 @@ def update_expense(expense_id: int, updated_expense: ExpenseCreate, db: Session 
 
 # Delete expense
 @router.delete("/{expense_id}")
-def delete_expense(expense_id: int, db: Session = Depends(get_db)):
+def delete_expense(expense_id: int, db: Session = Depends(require_roles(["admin", "customer"]))):
     expense = db.query(Expense).filter(Expense.id == expense_id).first()
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")

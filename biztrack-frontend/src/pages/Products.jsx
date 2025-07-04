@@ -1,4 +1,15 @@
 import React, { useEffect, useState } from "react";
+import {
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Box,
+} from "@mui/material";
 import api from "../services/api";
 import ProductForm from "../components/ProductForm";
 
@@ -17,7 +28,6 @@ const Products = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
-
     try {
       await api.delete(`/products/${id}`);
       fetchProducts();
@@ -45,8 +55,8 @@ const Products = () => {
   }, []);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Products</h2>
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5" gutterBottom>Products</Typography>
 
       <ProductForm
         onSuccess={fetchProducts}
@@ -54,34 +64,51 @@ const Products = () => {
         onUpdate={handleUpdate}
       />
 
-      <table border="1" cellPadding="10">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((prod) => (
-            <tr key={prod.id}>
-              <td>{prod.name}</td>
-              <td>{prod.category}</td>
-              <td>{prod.quantity}</td>
-              <td>{prod.price}</td>
-              <td>
-                <button onClick={() => handleEdit(prod)}>Edit</button>
-                <button onClick={() => handleDelete(prod.id)} style={{ marginLeft: "10px" }}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+      <Paper sx={{ mt: 4 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Quantity</TableCell>
+              <TableCell>Price</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {products.map((prod) => (
+              <TableRow key={prod.id}>
+                <TableCell>{prod.name}</TableCell>
+                <TableCell>{prod.category}</TableCell>
+                <TableCell>{prod.quantity}</TableCell>
+                <TableCell>{prod.price}</TableCell>
+                <TableCell>
+                  <Button onClick={() => handleEdit(prod)} variant="outlined" size="small">
+                    Edit
+                  </Button>
+                  <Button
+                    onClick={() => handleDelete(prod.id)}
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    sx={{ ml: 1 }}
+                  >
+                    Delete
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {products.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} align="center">
+                  No products found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Paper>
+    </Box>
   );
 };
 

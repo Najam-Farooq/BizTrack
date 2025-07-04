@@ -1,4 +1,15 @@
 import React, { useEffect, useState } from "react";
+import {
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Box,
+} from "@mui/material";
 import api from "../services/api";
 import ExpenseForm from "../components/ExpenseForm";
 
@@ -6,7 +17,6 @@ const Expenses = () => {
   const [expenses, setExpenses] = useState([]);
   const [editingExpense, setEditingExpense] = useState(null);
 
-  // Fetch expenses from backend
   const fetchExpenses = async () => {
     try {
       const res = await api.get("/expenses/");
@@ -16,11 +26,6 @@ const Expenses = () => {
     }
   };
 
-  useEffect(() => {
-    fetchExpenses();
-  }, []);
-
-  // Handle delete
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this expense?")) return;
     try {
@@ -31,51 +36,63 @@ const Expenses = () => {
     }
   };
 
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Expenses</h2>
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h5" gutterBottom>Expenses</Typography>
+
       <ExpenseForm
         onSuccess={fetchExpenses}
         editingExpense={editingExpense}
         cancelEdit={() => setEditingExpense(null)}
       />
 
-      <table border="1" cellPadding="10">
-        <thead>
-          <tr>
-            <th>Description</th>
-            <th>Amount</th>
-            <th>Category</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {expenses.map((exp) => (
-            <tr key={exp.id}>
-              <td>{exp.description}</td>
-              <td>{exp.amount}</td>
-              <td>{exp.category}</td>
-              <td>
-                <button onClick={() => setEditingExpense(exp)}>Edit</button>
-                <button
-                  onClick={() => handleDelete(exp.id)}
-                  style={{ marginLeft: "10px" }}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-          {expenses.length === 0 && (
-            <tr>
-              <td colSpan="4" style={{ textAlign: "center" }}>
-                No expenses found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+      <Paper sx={{ mt: 4 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Description</TableCell>
+              <TableCell>Amount</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {expenses.map((exp) => (
+              <TableRow key={exp.id}>
+                <TableCell>{exp.description}</TableCell>
+                <TableCell>{exp.amount}</TableCell>
+                <TableCell>{exp.category}</TableCell>
+                <TableCell>
+                  <Button onClick={() => setEditingExpense(exp)} variant="outlined" size="small">
+                    Edit
+                  </Button>
+                  <Button
+                    onClick={() => handleDelete(exp.id)}
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    sx={{ ml: 1 }}
+                  >
+                    Delete
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {expenses.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} align="center">
+                  No expenses found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Paper>
+    </Box>
   );
 };
 

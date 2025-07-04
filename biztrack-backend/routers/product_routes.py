@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models.product import Product
 from schemas.product_schema import ProductCreate, ProductOut
+from auth.dependencies import require_roles
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -51,7 +52,7 @@ def update_product(product_id: int, updated_product: ProductCreate, db: Session 
 
 
 @router.delete("/{product_id}")
-def delete_product(product_id: int, db: Session = Depends(get_db)):
+def delete_product(product_id: int, db: Session = Depends(require_roles(["admin", "customer"]))):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
